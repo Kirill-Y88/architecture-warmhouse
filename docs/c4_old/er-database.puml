@@ -1,0 +1,27 @@
+@startuml ER_Database
+
+title Структура базы данных — Warmhouse Smart Home (PostgreSQL)
+
+hide circle
+
+entity "sensors" as sensors {
+  * id : SERIAL <<генерируется>>
+  --
+  * name : VARCHAR(100) <<NOT NULL>>
+  * type : VARCHAR(50) <<NOT NULL>>
+  * location : VARCHAR(100) <<NOT NULL>>
+  * value : FLOAT <<по умолчанию 0>>
+  * unit : VARCHAR(20) <<может быть NULL>>
+  * status : VARCHAR(20) <<NOT NULL, по умолчанию 'inactive'>>
+  * last_updated : TIMESTAMPTZ <<NOT NULL, по умолчанию NOW()>>
+  * created_at : TIMESTAMPTZ <<NOT NULL, по умолчанию NOW()>>
+}
+
+note right of sensors
+  Индексы:
+  * idx_sensors_type     (type)
+  * idx_sensors_location (location)
+  * idx_sensors_status   (status)
+end note
+
+@enduml

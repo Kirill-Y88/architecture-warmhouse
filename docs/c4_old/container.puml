@@ -1,0 +1,21 @@
+@startuml C4_Container
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+LAYOUT_WITH_LEGEND()
+
+title C4 Контейнеры — Warmhouse Smart Home (текущая реализация)
+
+Person(user, "Пользователь / Владелец дома", "Управляет датчиками и отслеживает температуру")
+
+System_Boundary(smarthome_sys, "Система умного дома") {
+  Container(api, "Smart Home API", "Go / Gin", "REST API для CRUD датчиков, обновления значений и запросов температуры. Порт 8080.")
+  ContainerDb(db, "База данных", "PostgreSQL 16", "Хранит реестр датчиков (таблица sensors).")
+}
+
+System_Ext(temp_api, "Temperature API", "Внешний HTTP-сервис (порт 8081), возвращающий показания температуры по локации или id датчика")
+
+Rel(user, api, "Использует REST API", "HTTP/JSON")
+Rel(api, db, "Читает и пишет датчики", "SQL/TCP")
+Rel(api, temp_api, "Запрашивает показания температуры", "HTTP/JSON")
+
+@enduml
