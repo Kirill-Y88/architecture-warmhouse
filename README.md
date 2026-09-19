@@ -122,19 +122,21 @@
 
 **Диаграмма контейнеров (Containers)**
 
-Добавьте диаграмму.
+[Диаграмма контейнеров](docs/c4_new/container-smart-home-V2.puml)
 
 **Диаграмма компонентов (Components)**
 
-Добавьте диаграмму для каждого из выделенных микросервисов.
+[Диаграмма сервиса температуры](docs/c4_new/component-smart-home-api-temperature-V2.puml)
+[Диаграмма сервиса освещения](docs/c4_new/component-smart-home-api-light-V2.puml)
+[Диаграмма сервиса видеонаблюдения](docs/c4_new/component-smart-home-api-video-V2.puml)
 
 **Диаграмма кода (Code)**
 
-Добавьте одну диаграмму или несколько.
+[Диаграмма кода сервиса температуры](docs/c4_new/code-smart-home-api-temperature-V2.puml)
 
 # Задание 3. Разработка ER-диаграммы
 
-Добавьте сюда ER-диаграмму. Она должна отражать ключевые сущности системы, их атрибуты и тип связей между ними.
+[ER_диаграмма сервиса температуры](docs/c4_new/er-smart-home-api-temperature-V2.puml)
 
 # Задание 4. Создание и документирование API
 
