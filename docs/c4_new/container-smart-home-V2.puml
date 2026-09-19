@@ -1,0 +1,58 @@
+@startuml C4_Container
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+LAYOUT_WITH_LEGEND()
+
+title C4 Контейнеры — Smart Home (микросервисная архитектура)
+
+Person(user, "Пользователь / Владелец дома", "Управляет температурой, освещением и видеонаблюдением через приложение")
+
+System_Boundary(smarthome, "Система умного дома (микросервисы)") {
+  Container(gateway, "API Gateway", "HTTP", "Единая точка входа: маршрутизация запросов и проверка доступа")
+  Container(auth, "Auth Service", "HTTP / JWT", "Аутентификация и авторизация пользователей")
+  ContainerDb(auth_db, "База данных Auth", "PostgreSQL 16", "Пользователи, учётные данные, сессии/токены")
+
+  Container_Boundary(temp_module, "Температура") {
+    Container(temp_service, "Сервис температуры", "Go", "REST API, чтение показаний и управление регуляторами температуры")
+    ContainerDb(temp_db, "База данных сервиса температуры", "PostgreSQL 16", "Датчики и активные правила температуры")
+  }
+
+  Container_Boundary(light_module, "Освещение") {
+    Container(light_service, "Сервис освещения", "Go", "REST API, чтение показаний и управление освещением")
+    ContainerDb(light_db, "База данных сервиса освещения", "PostgreSQL 16", "Светильники и активные правила освещения")
+  }
+
+  Container_Boundary(video_module, "Видеонаблюдение") {
+    Container(video_service, "Сервис видеонаблюдения", "Go", "REST API, живой поток и PTZ-управление камерами")
+    ContainerDb(video_db, "База данных сервиса видеонаблюдения", "PostgreSQL 16", "Камеры и правила")
+  }
+}
+
+System_Ext(temp_api, "Temperature API", "Внешний сервис показаний температуры")
+System_Ext(regulator_api, "Regulator API", "Внешний сервис управления регуляторами")
+System_Ext(illuminance_api, "Illuminance API", "Внешний сервис показаний освещённости")
+System_Ext(light_regulator_api, "Light Regulator API", "Внешний сервис управления освещением")
+System_Ext(camera_api, "Camera API", "Внешний сервис камер: поток, PTZ, статус")
+
+Rel(user, gateway, "Использует приложение", "HTTPS/JSON")
+Rel(gateway, auth, "Проверяет аутентификацию/права", "HTTP/JSON")
+Rel(auth, auth_db, "Чтение/запись пользователей", "SQL/TCP")
+
+Rel(gateway, temp_service, "Маршрутизирует REST-запросы", "HTTP/JSON")
+Rel(gateway, light_service, "Маршрутизирует REST-запросы", "HTTP/JSON")
+Rel(gateway, video_service, "Маршрутизирует REST-запросы", "HTTP/JSON")
+
+Rel(temp_service, temp_db, "Чтение/запись датчиков и правил", "SQL/TCP")
+Rel(temp_service, temp_api, "GET /temperature", "HTTP/JSON")
+Rel(temp_service, regulator_api, "Команды и статус", "HTTP/JSON")
+
+Rel(light_service, light_db, "Чтение/запись светильников и правил", "SQL/TCP")
+Rel(light_service, illuminance_api, "GET /illuminance", "HTTP/JSON")
+Rel(light_service, light_regulator_api, "Команды и статус", "HTTP/JSON")
+
+Rel(video_service, video_db, "Чтение/запись камер и правил", "SQL/TCP")
+Rel(video_service, camera_api, "Живой поток", "RTSP/WebRTC")
+Rel(video_service, camera_api, "PTZ-команды и статус", "HTTP/JSON")
+
+@enduml
+
