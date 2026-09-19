@@ -142,11 +142,42 @@
 
 ### 1. Тип API
 
-Укажите, какой тип API вы будете использовать для взаимодействия микросервисов. Объясните своё решение.
+**Основной тип API — RESTful API (HTTP/JSON)** для взаимодействия микросервисов.
+
+#### Почему REST/JSON
+
+1. **Все взаимодействия — синхронные request/response.** Проверка токена, маршрутизация запросов, CRUD датчиков/регуляторов/правил, запрос температуры, отправка команды — всё «спросил → получил ответ», что естественно ложится на REST.
+2. **Согласованность со стеком.** Текущий монолит построен на Gin (REST/JSON) — продолжаем на том же стеке.
+3. **Простота документирования.** REST легко описывается в OpenAPI/Swagger и проверяется через Postman.
+
+#### Тип связи по направлениям
+
+| Направление | Тип | Протокол |
+|---|---|---|
+| Клиент → API Gateway | REST | HTTPS/JSON |
+| API Gateway → Auth Service | REST | HTTP/JSON + JWT |
+| API Gateway → Handlers модулей | REST | HTTP/JSON |
+| Внутри модуля (Handler → Sensor/DB/Regulator) | вызовы методов  | — |
+| Sensor Module → внешние API измерений | REST | HTTP/JSON |
+| Regulator/Control Module → внешние API управления | REST | HTTP/JSON |
+| Camera Stream Module → Camera API (видео) | Streaming | RTSP/WebRTC |
+
+#### В перспективе
+
+- Добавить брокер сообщений, когда появятся уведомления или события
+
+#### Итоги
+
+- **Основной тип: REST/JSON (HTTP)** — для синхронных взаимодействий.
+- **Аутентификация: JWT (stateless)**.
+- **Спец. случай: RTSP/WebRTC** — для видеопотока.
 
 ### 2. Документация API
 
-Здесь приложите ссылки на документацию API для микросервисов, которые вы спроектировали в первой части проектной работы. Для документирования используйте Swagger/OpenAPI или AsyncAPI.
+- [Auth Service](docs/c4_new/api/auth-service.yaml)
+- [Temperature Handler](docs/c4_new/api/temperature-handler.yaml)
+- [Light Handler](docs/c4_new/api/light-handler.yaml)
+- [Video Handler](docs/c4_new/api/video-handler.yaml)
 
 # Задание 5. Работа с docker и docker-compose
 

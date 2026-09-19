@@ -1,0 +1,248 @@
+openapi: 3.0.3
+info:
+  title: Video Handler API
+  description: Управление камерами, PTZ-командами и правилами видеонаблюдения.
+  version: 1.0.0
+servers:
+  - url: /api/v1
+
+paths:
+  /cameras:
+    get:
+      summary: Список камер пользователя
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Camera'
+    post:
+      summary: Создать камеру
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CameraCreate'
+      responses:
+        '201':
+          description: Создана
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Camera'
+  /cameras/{id}:
+    get:
+      summary: Камера по id
+      security: [{ bearerAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/IdPath' }]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Camera'
+    put:
+      summary: Обновить камеру
+      security: [{ bearerAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/IdPath' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CameraUpdate'
+      responses:
+        '200':
+          description: Обновлена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Camera'
+    delete:
+      summary: Удалить камеру
+      security: [{ bearerAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/IdPath' }]
+      responses:
+        '200':
+          description: Удалена
+  /cameras/{id}/stream:
+    get:
+      summary: Живой видеопоток камеры
+      description: Возвращает ссылку на поток (RTSP/WebRTC); сам поток — не JSON.
+      security: [{ bearerAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/IdPath' }]
+      responses:
+        '200':
+          description: Информация о потоке
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StreamInfo'
+  /cameras/{id}/ptz:
+    post:
+      summary: Отправить PTZ-команду камере
+      security: [{ bearerAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/IdPath' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PtzCommand'
+      responses:
+        '200':
+          description: Команда принята
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CameraStatus'
+
+  /rules:
+    get:
+      summary: Список правил (режимы работы, расписание)
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Rule'
+    post:
+      summary: Создать правило
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RuleCreate'
+      responses:
+        '201':
+          description: Создано
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Rule'
+  /rules/{id}:
+    get:
+      summary: Правило по id
+      security: [{ bearerAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/IdPath' }]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Rule'
+    put:
+      summary: Обновить правило
+      security: [{ bearerAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/IdPath' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RuleUpdate'
+      responses:
+        '200':
+          description: Обновлено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Rule'
+    delete:
+      summary: Удалить правило
+      security: [{ bearerAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/IdPath' }]
+      responses:
+        '200':
+          description: Удалено
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    IdPath:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+  schemas:
+    Camera:
+      type: object
+      properties:
+        id: { type: integer }
+        userId: { type: integer }
+        name: { type: string }
+        location: { type: string }
+        status: { type: string }
+    CameraCreate:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string }
+        location: { type: string }
+    CameraUpdate:
+      type: object
+      properties:
+        name: { type: string }
+        location: { type: string }
+    PtzCommand:
+      type: object
+      required: [action]
+      properties:
+        action:
+          type: string
+          enum: [pan, tilt, zoom, preset, home]
+        value: { type: number }
+    CameraStatus:
+      type: object
+      properties:
+        cameraId: { type: integer }
+        position: { type: string }
+        status: { type: string }
+    StreamInfo:
+      type: object
+      properties:
+        cameraId: { type: integer }
+        url: { type: string, description: "Ссылка на RTSP/WebRTC-поток" }
+        protocol: { type: string, enum: [rtsp, webrtc, hls] }
+    Rule:
+      type: object
+      properties:
+        id: { type: integer }
+        userId: { type: integer }
+        cameraId: { type: integer }
+        mode: { type: string, description: "Режим работы" }
+        schedule: { type: string, description: "Расписание движения" }
+        status: { type: string }
+    RuleCreate:
+      type: object
+      required: [cameraId, mode]
+      properties:
+        cameraId: { type: integer }
+        mode: { type: string }
+        schedule: { type: string }
+    RuleUpdate:
+      type: object
+      properties:
+        cameraId: { type: integer }
+        mode: { type: string }
+        schedule: { type: string }
+        status: { type: string }
