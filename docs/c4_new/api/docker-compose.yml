@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  swagger-ui:
+    image: swaggerapi/swagger-ui
+    container_name: smarthome-swagger-ui
+    ports:
+      - "8080:8080"
+    environment:
+      URLS: '[{"url":"/specs/auth-service.yaml","name":"Auth Service"},{"url":"/specs/temperature-handler.yaml","name":"Temperature Handler"},{"url":"/specs/light-handler.yaml","name":"Light Handler"},{"url":"/specs/video-handler.yaml","name":"Video Handler"}]'
+    volumes:
+      - ./:/usr/share/nginx/html/specs:ro
+    restart: unless-stopped

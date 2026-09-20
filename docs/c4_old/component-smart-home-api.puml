@@ -1,0 +1,27 @@
+@startuml C4_Component
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+LAYOUT_WITH_LEGEND()
+
+title C4 Компоненты — Smart Home API (текущая реализация)
+
+Person(user, "Пользователь / Владелец дома", "Вызывает REST API")
+
+Container_Boundary(api_boundary, "Smart Home API (Go / Gin)") {
+  Component(sensor_handler, "Sensor Handler (приложение и домен)", "Gin / handlers + models", "REST-эндпоинты (CRUD датчиков, PATCH значения, запрос температуры) плюс доменная модель: Sensor, SensorCreate, SensorUpdate, SensorType")
+  Component(temp_service, "Temperature Service", "Go / services", "HTTP-клиент, получающий показания температуры из Temperature API (по локации или id датчика)")
+  Component(db_repo, "DB Repository", "Go / db (pgxpool)", "Слой доступа к данным (таблица sensors)")
+}
+
+ContainerDb(db, "База данных", "PostgreSQL 16", "Хранит реестр датчиков (таблица sensors)")
+
+System_Ext(temp_api, "Temperature API", "Внешний HTTP-сервис, возвращающий показания температуры по локации или id датчика")
+
+Rel(user, sensor_handler, "REST /api/v1/sensors/*", "HTTP/JSON")
+Rel(sensor_handler, temp_service, "Запрашивает показания по локации / id датчика", "вызов Go")
+Rel(sensor_handler, db_repo, "CRUD и обновление value/status", "вызов Go")
+Rel(db_repo, sensor_handler, "Маппинг строк в/из доменной модели", "Go")
+Rel(db_repo, db, "Читает и пишет датчики", "SQL/TCP")
+Rel(temp_service, temp_api, "GET /temperature?location= и GET /temperature/{sensorId}", "HTTP/JSON")
+
+@enduml

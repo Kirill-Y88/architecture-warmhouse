@@ -1,0 +1,46 @@
+@startuml C4_Component
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+LAYOUT_WITH_LEGEND()
+
+title C4 Компоненты — Smart Home (микросервисная архитектура, модуль видеонаблюдения)
+
+Person(user, "Пользователь / Владелец дома", "Управляет видеонаблюдением и просматривает живое видео через приложение")
+
+System_Boundary(smarthome, "Система умного дома (микросервисы)") {
+  Together {
+    Component(gateway, "API Gateway", "HTTP", "Единая точка входа: маршрутизация запросов и проверка доступа")
+    Component(auth, "Auth Service", "HTTP / JWT", "Аутентификация и авторизация пользователей")
+  }
+  Container_Boundary(core_svc, "Сервисы регулирования видеонаблюдения") {
+    Component(camera_handler, "Camera Handler", "Go / Gin", "REST-эндпоинты: камеры, PTZ, правила, видеопоток")
+    Component(camera_stream_svc, "Camera Stream Module", "Go", "Чтение видеопотока из Camera API + CRUD камер")
+    Component(camera_control_svc, "Camera Control Module", "Go", "PTZ-управление камерами + CRUD правил (режимы работы, расписание)")
+    Component(db_repo, "Camera DB Repository", "Go / db (pgxpool)", "Общий слой доступа к данным (камеры, правила, PTZ-настройки)")
+  }
+}
+
+ContainerDb(db, "База данных сервиса видеонаблюдения", "PostgreSQL 16", "Хранит камеры, правила и PTZ-настройки")
+ContainerDb(auth_db, "База данных Auth", "PostgreSQL 16", "Хранит пользователей, учётные данные и сессии/токены")
+
+System_Ext(camera_api, "Camera API", "Внешний сервис камер: живой поток, PTZ, статус")
+
+Rel(user, gateway, "Использует приложение (REST API)", "HTTPS/JSON")
+Rel(gateway, auth, "Проверяет аутентификацию/права", "HTTP/JSON")
+Rel(auth, gateway, "Выдаёт JWT-токен", "HTTP/JSON")
+gateway -[hidden]- auth
+Rel(auth, auth_db, "Чтение/запись пользователей и учётных данных", "SQL/TCP")
+Rel(gateway, camera_handler, "Маршрутизирует REST-запросы", "HTTP/JSON")
+
+Rel(camera_handler, camera_stream_svc, "CRUD камер / резолв локации", "вызов")
+Rel(camera_handler, camera_stream_svc, "Видеопоток по id камеры", "вызов")
+Rel(camera_handler, camera_control_svc, "CRUD правил и PTZ-настроек", "вызов")
+
+Rel(camera_stream_svc, camera_api, "Видеопоток", "RTSP/WebRTC")
+Rel(camera_stream_svc, db_repo, "CRUD камер", "вызов")
+Rel(db_repo, db, "Чтение и запись", "SQL/TCP")
+
+Rel(camera_control_svc, camera_api, "PTZ-команды и статус", "HTTP/JSON")
+Rel(camera_control_svc, db_repo, "CRUD правил, активные правила", "вызов")
+
+@enduml

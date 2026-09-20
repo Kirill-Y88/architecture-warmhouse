@@ -1,0 +1,328 @@
+openapi: 3.0.3
+info:
+  title: Light Handler API
+  description: Управление светильниками, диммерами и правилами освещения + чтение освещённости.
+  version: 1.0.0
+servers:
+  - url: /api/v1
+
+paths:
+  /fixtures:
+    get:
+      summary: Список светильников пользователя
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Fixture'
+    post:
+      summary: Создать светильник
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FixtureCreate'
+      responses:
+        '201':
+          description: Создан
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Fixture'
+  /fixtures/{id}:
+    get:
+      summary: Светильник по id
+      security: [{ bearerAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/IdPath' }]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Fixture'
+    put:
+      summary: Обновить светильник
+      security: [{ bearerAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/IdPath' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FixtureUpdate'
+      responses:
+        '200':
+          description: Обновлён
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Fixture'
+    delete:
+      summary: Удалить светильник
+      security: [{ bearerAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/IdPath' }]
+      responses:
+        '200':
+          description: Удалён
+  /fixtures/illuminance/{location}:
+    get:
+      summary: Освещённость по локации
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: location
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/IlluminanceResponse'
+  /regulators:
+    get:
+      summary: Список диммеров
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Regulator'
+    post:
+      summary: Создать диммер
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegulatorCreate'
+      responses:
+        '201':
+          description: Создан
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Regulator'
+  /regulators/{id}:
+    get:
+      summary: Диммер по id
+      security: [{ bearerAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/IdPath' }]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Regulator'
+    put:
+      summary: Обновить диммер
+      security: [{ bearerAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/IdPath' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegulatorUpdate'
+      responses:
+        '200':
+          description: Обновлён
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Regulator'
+    delete:
+      summary: Удалить диммер
+      security: [{ bearerAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/IdPath' }]
+      responses:
+        '200':
+          description: Удалён
+
+  /rules:
+    get:
+      summary: Список правил
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Rule'
+    post:
+      summary: Создать правило
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RuleCreate'
+      responses:
+        '201':
+          description: Создано
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Rule'
+  /rules/{id}:
+    get:
+      summary: Правило по id
+      security: [{ bearerAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/IdPath' }]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Rule'
+    put:
+      summary: Обновить правило
+      security: [{ bearerAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/IdPath' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RuleUpdate'
+      responses:
+        '200':
+          description: Обновлено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Rule'
+    delete:
+      summary: Удалить правило
+      security: [{ bearerAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/IdPath' }]
+      responses:
+        '200':
+          description: Удалено
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    IdPath:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+  schemas:
+    Fixture:
+      type: object
+      properties:
+        id: { type: integer }
+        userId: { type: integer }
+        name: { type: string }
+        location: { type: string }
+        unit: { type: string }
+    FixtureCreate:
+      type: object
+      required: [name, location]
+      properties:
+        name: { type: string }
+        location: { type: string }
+        unit: { type: string }
+    FixtureUpdate:
+      type: object
+      properties:
+        name: { type: string }
+        location: { type: string }
+        unit: { type: string }
+    RegulatorMode:
+      type: string
+      enum: [discrete, proportional]
+    Regulator:
+      type: object
+      properties:
+        id: { type: integer }
+        userId: { type: integer }
+        name: { type: string }
+        location: { type: string }
+        unit: { type: string }
+        mode: { $ref: '#/components/schemas/RegulatorMode' }
+        status: { type: string }
+    RegulatorCreate:
+      type: object
+      required: [name, mode]
+      properties:
+        name: { type: string }
+        mode: { $ref: '#/components/schemas/RegulatorMode' }
+        location: { type: string }
+        unit: { type: string }
+    RegulatorUpdate:
+      type: object
+      properties:
+        name: { type: string }
+        mode: { $ref: '#/components/schemas/RegulatorMode' }
+        location: { type: string }
+        unit: { type: string }
+    Rule:
+      type: object
+      properties:
+        id: { type: integer }
+        userId: { type: integer }
+        zone: { type: string }
+        fixtureId: { type: integer }
+        regulatorId: { type: integer }
+        targetIlluminance: { type: number }
+        hysteresis: { type: number }
+        status: { type: string }
+    RuleCreate:
+      type: object
+      required: [zone, fixtureId, regulatorId, targetIlluminance]
+      properties:
+        zone: { type: string }
+        fixtureId: { type: integer }
+        regulatorId: { type: integer }
+        targetIlluminance: { type: number }
+        hysteresis: { type: number }
+    RuleUpdate:
+      type: object
+      properties:
+        zone: { type: string }
+        fixtureId: { type: integer }
+        regulatorId: { type: integer }
+        targetIlluminance: { type: number }
+        hysteresis: { type: number }
+        status: { type: string }
+    IlluminanceResponse:
+      type: object
+      properties:
+        value: { type: number, description: "Освещённость в люксах (lux)" }
+        unit: { type: string }
+        timestamp: { type: string, format: date-time }
+        location: { type: string }
+        status: { type: string }
+        sensorId: { type: integer }
+        sensorType: { type: string }
+        description: { type: string }

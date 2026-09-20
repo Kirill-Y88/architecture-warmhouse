@@ -1,0 +1,48 @@
+@startuml C4_Component
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+LAYOUT_WITH_LEGEND()
+
+title C4 Компоненты — Smart Home (микросервисная архитектура, модуль освещения)
+
+Person(user, "Пользователь / Владелец дома", "Управляет освещением и настройками через приложение")
+
+System_Boundary(smarthome, "Система умного дома (микросервисы)") {
+  Together {
+    Component(gateway, "API Gateway", "HTTP", "Единая точка входа: маршрутизация запросов и проверка доступа")
+    Component(auth, "Auth Service", "HTTP / JWT", "Аутентификация и авторизация пользователей")
+  }
+  Container_Boundary(core_svc, "Сервисы регулирования освещения") {
+    Component(light_handler, "Light Handler", "Go / Gin", "REST-эндпоинты: светильники, регуляторы, правила, освещённость")
+    Component(light_sensor_svc, "Light Sensor Module", "Go", "Чтение освещённости из Illuminance API + CRUD светильников")
+    Component(db_repo, "Light DB Repository", "Go / db (pgxpool)", "Общий слой доступа к данным (светильники, правила, регуляторы)")
+    Component(light_regulator_svc, "Light Regulator Module", "Go", "Цикл управления освещением + CRUD регуляторов и правил")
+  }
+}
+
+ContainerDb(db, "База данных сервиса освещения", "PostgreSQL 16", "Хранит светильники, правила и регуляторы")
+ContainerDb(auth_db, "База данных Auth", "PostgreSQL 16", "Хранит пользователей, учётные данные и сессии/токены")
+
+System_Ext(illuminance_api, "Illuminance API", "Внешний сервис, возвращающий показания освещённости")
+System_Ext(light_regulator_api, "Light Regulator API", "Внешний сервис управления освещением (диммеры, статус)")
+
+Rel(user, gateway, "Использует приложение (REST API)", "HTTPS/JSON")
+Rel(gateway, auth, "Проверяет аутентификацию/права", "HTTP/JSON")
+Rel(auth, gateway, "Выдаёт JWT-токен", "HTTP/JSON")
+gateway -[hidden]- auth
+Rel(auth, auth_db, "Чтение/запись пользователей и учётных данных", "SQL/TCP")
+Rel(gateway, light_handler, "Маршрутизирует REST-запросы", "HTTP/JSON")
+
+Rel(light_handler, light_sensor_svc, "CRUD светильников / резолв локации", "вызов")
+Rel(light_handler, light_sensor_svc, "Освещённость по id датчика", "вызов")
+Rel(light_handler, light_regulator_svc, "CRUD регуляторов и правил", "вызов")
+
+Rel(light_sensor_svc, illuminance_api, "GetIlluminanceByID", "HTTP/JSON")
+Rel(light_sensor_svc, db_repo, "CRUD светильников", "вызов")
+Rel(db_repo, db, "Чтение и запись", "SQL/TCP")
+
+Rel(light_regulator_svc, light_regulator_api, "Команды управления и чтение статуса/яркости", "HTTP/JSON")
+Rel(light_regulator_svc, db_repo, "CRUD регуляторов, правил, активные правила", "вызов")
+Rel(light_regulator_svc, light_sensor_svc, "Получение актуальной освещённости", "вызов")
+
+@enduml

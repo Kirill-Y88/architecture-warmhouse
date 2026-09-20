@@ -1,0 +1,65 @@
+@startuml ER_Database
+
+title ER — Smart Home: приложение регулирования температуры (+ Auth Service)
+
+hide circle
+skinparam linetype ortho
+skinparam classAttributeIconSize 0
+
+entity "users" as users {
+  * id : SERIAL <<generated>>
+  --
+  login : VARCHAR(255) <<NOT NULL, UNIQUE>>
+  password : VARCHAR(255) <<NOT NULL>>
+  name : VARCHAR(100)
+  created_at : TIMESTAMPTZ <<DEFAULT NOW()>>
+}
+
+entity "sensors" as sensors {
+  * id : SERIAL <<generated>>
+  --
+  user_id : INT <<FK>>
+  name : VARCHAR(100) <<NOT NULL>>
+  type : VARCHAR(20) <<NOT NULL>>
+  location : VARCHAR(100) <<NOT NULL>>
+  unit : VARCHAR(20)
+}
+
+entity "regulators" as regulators {
+  * id : SERIAL <<generated>>
+  --
+  user_id : INT <<FK>>
+  name : VARCHAR(100) <<NOT NULL>>
+  location : VARCHAR(100)
+  unit : VARCHAR(20)
+  mode : VARCHAR(20) <<NOT NULL>>
+  status : VARCHAR(20) <<DEFAULT 'inactive'>>
+}
+
+entity "rules" as rules {
+  * id : SERIAL <<generated>>
+  --
+  user_id : INT <<FK>>
+  zone : VARCHAR(100) <<NOT NULL>>
+  sensor_id : INT <<FK>>
+  regulator_id : INT <<FK>>
+  target_temperature : FLOAT <<NOT NULL>>
+  hysteresis : FLOAT <<DEFAULT 0>>
+  status : VARCHAR(20) <<DEFAULT 'active'>>
+}
+
+users ||--o{ sensors
+users ||--o{ regulators
+users ||--o{ rules
+sensors ||--o{ rules
+regulators ||--o{ rules
+
+note right of sensors
+  type — SensorType: temperature | video | light
+end note
+
+note right of regulators
+  mode — RegulatorMode: discrete | proportional
+end note
+
+@enduml

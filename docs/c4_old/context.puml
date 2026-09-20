@@ -1,0 +1,17 @@
+@startuml C4_Context
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+LAYOUT_WITH_LEGEND()
+
+title C4 Контекст системы — Warmhouse Smart Home (текущая реализация)
+
+Person(user, "Пользователь / Владелец дома", "Управляет датчиками температуры и отслеживает текущую температуру в комнатах")
+
+System(smarthome, "Система умного дома", "Ведёт реестр датчиков и возвращает текущие показания температуры по комнатам (гостиная, спальня, кухня)")
+
+System_Ext(temp_api, "Temperature API", "Внешний сервис, возвращающий показания температуры по локации или датчику (сейчас — случайные значения)")
+
+Rel(user, smarthome, "Использует REST API для управления датчиками и чтения температуры", "HTTP/JSON")
+Rel(smarthome, temp_api, "Запрашивает показания температуры по локации / id датчика", "HTTP/JSON")
+
+@enduml

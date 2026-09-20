@@ -1,0 +1,249 @@
+@startuml C4_Code
+
+title C4 Код — Smart Home: приложение регулирования температуры
+
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+hide empty members
+allowmixing
+
+package "Application" {
+  package "Temperature Handler"{
+  class TemperatureHandler {
+    + TemperatureService : *TemperatureSensorService
+    + TemperatureSensorAPIClient : *TemperatureSensorAPIClient
+    + RegulatorService : *RegulatorService
+    + RuleService : *RuleService
+    + GetSensors(c)
+    + GetSensorByID(c)
+    + CreateSensor(c)
+    + UpdateSensor(c)
+    + DeleteSensor(c)
+    + GetRegulator(c)
+    + GetRegulatorByID(c)
+    + CreateRegulator(c)
+    + UpdateRegulator(c)
+    + DeleteRegulator(c)
+    + GetTemperatureByLocation(c)
+    + GetRule(c)
+    + GetRuleByID(c)
+    + CreateRule(c)
+    + UpdateRule(c)
+    + DeleteRule(c)
+  }
+  }
+  package "Temperature Sensor Module"{
+  class TemperatureSensorAPIClient {
+    + BaseURL : string
+    + HTTPClient : *http.Client
+        + GetTemperatureByID(sensorID int)
+  }
+    class TemperatureSensorService {
+    + Repository : *TemperatureDBRepository
+    + GetSensor(ctx)
+    + GetSensorsByLocation(ctx, location string)
+    + GetSensorByID(ctx, id)
+    + CreateSensor(ctx, s)
+    + UpdateSensor(ctx, id, s)
+    + DeleteSensor(ctx, id)
+    }
+}
+  package "Temperature DB Repository"{
+  class TemperatureDBRepository {
+    + Pool : *pgxpool.Pool
+    + GetSensors(ctx)
+    + GetSensorsByLocation(ctx, location string)
+    + GetSensorByID(ctx, id)
+    + CreateSensor(ctx, s)
+    + UpdateSensor(ctx, id, s)
+    + DeleteSensor(ctx, id)
+    + UpdateSensorValue(ctx, id, value, status)
+    + GetRule(ctx, userID)
+    + GetRuleByID(ctx, id)
+    + GetActiveRules(ctx, userID)
+    + CreateRule(ctx, r)
+    + UpdateRule(ctx, id, r)
+    + DeleteRule(ctx, id)
+    + GetRegulator(ctx, userID)
+    + GetRegulatorByID(ctx, id)
+    + CreateRegulator(ctx, reg)
+    + UpdateRegulator(ctx, id, reg)
+    + DeleteRegulator(ctx, id)
+  }
+    }
+
+  package "Temperature Regulator Module" {
+  class RegulatorService {
+    + Repository : *TemperatureDBRepository
+    + GetRegulator(ctx)
+    + GetRegulatorByID(ctx, id)
+    + CreateRegulator(ctx, reg)
+    + UpdateRegulator(ctx, id, reg)
+    + DeleteRegulator(ctx, id)
+  }
+  class RuleService {
+    + Repository : *TemperatureDBRepository
+    + GetRule(ctx)
+    + GetRuleByID(ctx, id)
+    + CreateRule(ctx, r)
+    + UpdateRule(ctx, id, r)
+    + DeleteRule(ctx, id)
+    + GetActiveRules(ctx, userID)
+  }
+    class Executor {
+      + RuleService : *RuleService
+      + TemperatureSensorAPIClient : *TemperatureSensorAPIClient
+      + Compute : *Compute
+      + RegulatorAPIClient : *RegulatorAPIClient
+      + Run(ctx)
+      + ProcessRule(rule Rule)
+    }
+    class Compute {
+      + Calculate(rule Rule, current float64) RegulatorRequest
+    }
+    class RegulatorAPIClient {
+      + BaseURL : string
+      + HTTPClient : *http.Client
+      + SendCommand(request RegulatorRequest) RegulatorResponse
+      + GetState(regulatorID int) RegulatorResponse
+    }
+  }
+}
+
+package "models" {
+  enum SensorType {
+    Temperature
+    Video
+    Light
+  }
+  class Sensor {
+    + ID : int
+    + UserID : int
+    + Name : string
+    + Type : SensorType
+    + Location : string
+    + Unit : string
+  }
+  class SensorRequest {
+    + SensorID : int
+  }
+  class SensorCreate {
+    + Name : string
+    + UserID : int
+    + Type : SensorType
+    + Location : string
+    + Unit : string
+  }
+  class SensorUpdate {
+    + ID : int
+    + Name : string
+    + Type : SensorType
+    + Location : string
+    + Unit : string
+  }
+  class RegulatorCreate {
+    + Name : string
+    + UserID : int
+    + Mode : RegulatorMode
+    + Location : string
+    + Unit : string
+  }
+  class RegulatorUpdate {
+    + ID : int
+    + Name : string
+    + Mode : RegulatorMode
+    + Location : string
+    + Unit : string
+  }
+  enum RegulatorMode {
+    Discrete
+    Proportional
+  }
+  class Regulator {
+    + ID : int
+    + UserID : int
+    + Name : string
+    + Location : string
+    + Unit : string
+    + Mode : RegulatorMode
+    + Status : string
+  }
+  class Rule {
+    + ID : int
+    + UserID : int
+    + Zone : string
+    + SensorID : int
+    + RegulatorID : int
+    + TargetTemperature : float64
+    + Hysteresis : float64
+    + Status : string
+  }
+  class RegulatorResponse {
+    + RegulatorID : int
+    + Position : int
+    + Status : string
+  }
+  class RegulatorRequest {
+    + RegulatorID : int
+    + Position : int
+  }
+  class SensorResponse {
+    + Value : float64
+    + Unit : string
+    + Timestamp : time.Time
+    + Location : string
+    + Status : string
+    + SensorID : int
+    + SensorType : string
+    + Description : string
+  }
+}
+
+component "Temperature API" as temp_api <<внешний>>
+component "Regulator API" as regulator_api <<внешний>>
+database "PostgreSQL" as pg <<внешний>>
+
+TemperatureHandler --> TemperatureSensorService : вызов
+TemperatureHandler --> RegulatorService : вызов — CRUD регуляторов
+TemperatureHandler --> RuleService : вызов — CRUD правил
+TemperatureHandler --> TemperatureSensorAPIClient : вызов — температура
+
+Executor --> RuleService : активные правила
+Executor --> TemperatureSensorAPIClient : вызов — температура
+Executor --> Compute : расчёт
+Executor --> RegulatorAPIClient : отправка команды
+
+RegulatorService --> TemperatureDBRepository : вызов
+TemperatureSensorService --> TemperatureDBRepository : вызов
+RuleService --> TemperatureDBRepository : вызов
+
+TemperatureSensorAPIClient --> temp_api : HTTP
+temp_api --> TemperatureSensorAPIClient : HTTP (SensorRequest/SensorResponse)
+
+RegulatorAPIClient --> regulator_api : HTTP (RegulatorRequest/RegulatorResponse)
+regulator_api --> RegulatorAPIClient
+TemperatureDBRepository --> pg : SQL
+
+Regulator --> RegulatorMode
+Sensor --> SensorType
+
+legend
+  Сокращения в аргументах методов:
+  c           = *gin.Context      — HTTP-контекст Gin (запрос/ответ)
+  ctx         = context.Context   — контекст Go (отмена, таймаут, сквозные значения)
+  id          = int               — идентификатор сущности
+  userID      = int               — идентификатор пользователя
+  sensorID    = int               — идентификатор датчика
+  regulatorID = int               — идентификатор регулятора
+  location    = string            — локация / комната
+  s           = SensorCreate/SensorUpdate — объект датчика (DTO)
+  r           = Rule              — объект правила
+  reg         = RegulatorCreate/RegulatorUpdate — объект регулятора (DTO)
+  rule        = Rule              — правило (в Compute)
+  request     = RegulatorRequest  — запрос/команда регулятору
+  value       = float64           — значение датчика
+  status      = string            — статус
+  current     = float64           — текущая температура
+endlegend
+
+@enduml

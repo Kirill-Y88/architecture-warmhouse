@@ -1,0 +1,118 @@
+@startuml C4_Code
+
+title C4 Код — Smart Home API (пакеты и типы Go)
+
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+hide empty members
+allowmixing
+
+package "main" {
+  class Main <<точка входа: main.go>> {
+    + main()
+    + getEnv(key, default)
+  }
+}
+
+package "handlers" {
+  class SensorHandler {
+    + DB : *db.DB
+    + TemperatureService : *services.TemperatureService
+    + RegisterRoutes(router *gin.RouterGroup)
+    + GetSensors(c *gin.Context)
+    + GetSensorByID(c *gin.Context)
+    + GetTemperatureByLocation(c *gin.Context)
+    + CreateSensor(c *gin.Context)
+    + UpdateSensor(c *gin.Context)
+    + DeleteSensor(c *gin.Context)
+    + UpdateSensorValue(c *gin.Context)
+  }
+}
+
+package "services" {
+  class TemperatureService {
+    + BaseURL : string
+    + HTTPClient : *http.Client
+    + GetTemperature(location string) (*TemperatureResponse, error)
+    + GetTemperatureByID(sensorID string) (*TemperatureResponse, error)
+  }
+  class TemperatureResponse {
+    + Value : float64
+    + Unit : string
+    + Timestamp : time.Time
+    + Location : string
+    + Status : string
+    + SensorID : string
+    + SensorType : string
+    + Description : string
+  }
+}
+
+package "db" {
+  class DB {
+    + Pool : *pgxpool.Pool
+    + New(connString string) (*DB, error)
+    + Close()
+    + GetSensors(ctx) ([]models.Sensor, error)
+    + GetSensorByID(ctx, id) (models.Sensor, error)
+    + CreateSensor(ctx, s) (models.Sensor, error)
+    + UpdateSensor(ctx, id, s) (models.Sensor, error)
+    + DeleteSensor(ctx, id) error
+    + UpdateSensorValue(ctx, id, value, status) error
+  }
+}
+
+package "models" {
+  enum SensorType {
+    Temperature
+  }
+  class Sensor {
+    + ID : int
+    + Name : string
+    + Type : SensorType
+    + Location : string
+    + Value : float64
+    + Unit : string
+    + Status : string
+    + LastUpdated : time.Time
+    + CreatedAt : time.Time
+  }
+  class SensorCreate {
+    + Name : string
+    + Type : SensorType
+    + Location : string
+    + Unit : string
+  }
+  class SensorUpdate {
+    + Name : string
+    + Type : SensorType
+    + Location : string
+    + Value : *float64
+    + Unit : string
+    + Status : string
+  }
+}
+
+component "Temperature API" as temp_api <<внешний>>
+component "PostgreSQL 16" as pg <<внешний>>
+
+Main --> DB : создаёт через db.New
+Main --> TemperatureService : создаёт
+Main --> SensorHandler : связывает зависимости
+
+SensorHandler --> DB : CRUD + обновление value/status
+SensorHandler --> TemperatureService : запрашивает показания по локации / id датчика
+
+DB ..> Sensor : маппит строки
+DB ..> SensorCreate : вставляет
+DB ..> SensorUpdate : обновляет
+TemperatureService ..> TemperatureResponse : декодирует JSON
+
+Sensor --> SensorType : имеет тип
+SensorCreate --> SensorType : имеет тип
+SensorUpdate --> SensorType : имеет тип
+
+TemperatureService ..> temp_api : HTTP GET /temperature
+DB ..> pg : SQL (pgxpool)
+
+@enduml

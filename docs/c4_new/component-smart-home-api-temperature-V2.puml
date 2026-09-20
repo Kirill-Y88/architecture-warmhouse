@@ -1,0 +1,48 @@
+@startuml C4_Component
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+LAYOUT_WITH_LEGEND()
+
+title C4 Компоненты — Smart Home (микросервисная архитектура, этап 1)
+
+Person(user, "Пользователь / Владелец дома", "Управляет температурой и настройками через приложение")
+
+System_Boundary(smarthome, "Система умного дома (микросервисы)") {
+  Together {
+    Component(gateway, "API Gateway", "HTTP", "Единая точка входа: маршрутизация запросов и проверка доступа")
+    Component(auth, "Auth Service", "HTTP / JWT", "Аутентификация и авторизация пользователей")
+  }
+  Container_Boundary(core_svc, "Сервисы регулирования температуры") {
+    Component(temp_handler, "Temperature Handler", "Go / Gin", "REST-эндпоинты: датчики, регуляторы, правила, температура")
+    Component(temp_sensor_svc, "Temperature Sensor Module", "Go", "Чтение температуры из Temperature API + CRUD датчиков")
+    Component(db_repo, "Temperature DB Repository", "Go / db (pgxpool)", "Общий слой доступа к данным (датчики, правила, регуляторы)")
+    Component(regulator_svc, "Temperature Regulator Module", "Go", "Цикл управления регуляторами + CRUD регуляторов и правил")
+  }
+}
+
+ContainerDb(db, "База данных сервиса температуры", "PostgreSQL 16", "Хранит датчики, правила и регуляторы")
+ContainerDb(auth_db, "База данных Auth", "PostgreSQL 16", "Хранит пользователей, учётные данные и сессии/токены")
+
+System_Ext(temp_api, "Temperature API", "Внешний сервис, возвращающий показания температуры")
+System_Ext(regulator_api, "Regulator API", "Внешний сервис управления регуляторами (статус, положение)")
+
+Rel(user, gateway, "Использует приложение (REST API)", "HTTPS/JSON")
+Rel(gateway, auth, "Проверяет аутентификацию/права", "HTTP/JSON")
+Rel(auth, gateway, "Выдаёт JWT-токен", "HTTP/JSON")
+gateway -[hidden]- auth
+Rel(auth, auth_db, "Чтение/запись пользователей и учётных данных", "SQL/TCP")
+Rel(gateway, temp_handler, "Маршрутизирует REST-запросы", "HTTP/JSON")
+
+Rel(temp_handler, temp_sensor_svc, "CRUD датчиков / резолв локации", "вызов")
+Rel(temp_handler, temp_sensor_svc, "Температура по id датчика", "вызов")
+Rel(temp_handler, regulator_svc, "CRUD регуляторов и правил", "вызов")
+
+Rel(temp_sensor_svc, temp_api, "GetTemperatureByID", "HTTP/JSON")
+Rel(temp_sensor_svc, db_repo, "CRUD датчиков", "вызов")
+Rel(db_repo, db, "Чтение и запись", "SQL/TCP")
+
+Rel(regulator_svc, regulator_api, "Команды настройки и чтение статуса/положения", "HTTP/JSON")
+Rel(regulator_svc, db_repo, "CRUD регуляторов, правил, активные правила", "вызов")
+Rel(regulator_svc, temp_sensor_svc, "Получение актуальной температуры", "вызов")
+
+@enduml

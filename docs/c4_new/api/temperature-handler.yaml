@@ -1,0 +1,334 @@
+openapi: 3.0.3
+info:
+  title: Temperature Handler API
+  description: Управление датчиками, регуляторами и правилами температуры + чтение показаний.
+  version: 1.0.0
+servers:
+  - url: /api/v1
+
+paths:
+  /sensors:
+    get:
+      summary: Список датчиков пользователя
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Sensor'
+    post:
+      summary: Создать датчик
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SensorCreate'
+      responses:
+        '201':
+          description: Создан
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Sensor'
+  /sensors/{id}:
+    get:
+      summary: Датчик по id
+      security: [{ bearerAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/IdPath' }]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Sensor'
+    put:
+      summary: Обновить датчик
+      security: [{ bearerAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/IdPath' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SensorUpdate'
+      responses:
+        '200':
+          description: Обновлён
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Sensor'
+    delete:
+      summary: Удалить датчик
+      security: [{ bearerAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/IdPath' }]
+      responses:
+        '200':
+          description: Удалён
+  /sensors/temperature/{location}:
+    get:
+      summary: Температура по локации (все датчики в локации)
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: location
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TemperatureResponse'
+  /regulators:
+    get:
+      summary: Список регуляторов
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Regulator'
+    post:
+      summary: Создать регулятор
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegulatorCreate'
+      responses:
+        '201':
+          description: Создан
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Regulator'
+  /regulators/{id}:
+    get:
+      summary: Регулятор по id
+      security: [{ bearerAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/IdPath' }]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Regulator'
+    put:
+      summary: Обновить регулятор
+      security: [{ bearerAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/IdPath' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegulatorUpdate'
+      responses:
+        '200':
+          description: Обновлён
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Regulator'
+    delete:
+      summary: Удалить регулятор
+      security: [{ bearerAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/IdPath' }]
+      responses:
+        '200':
+          description: Удалён
+
+  /rules:
+    get:
+      summary: Список правил
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Rule'
+    post:
+      summary: Создать правило
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RuleCreate'
+      responses:
+        '201':
+          description: Создано
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Rule'
+  /rules/{id}:
+    get:
+      summary: Правило по id
+      security: [{ bearerAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/IdPath' }]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Rule'
+    put:
+      summary: Обновить правило
+      security: [{ bearerAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/IdPath' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RuleUpdate'
+      responses:
+        '200':
+          description: Обновлено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Rule'
+    delete:
+      summary: Удалить правило
+      security: [{ bearerAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/IdPath' }]
+      responses:
+        '200':
+          description: Удалено
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    IdPath:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+  schemas:
+    SensorType:
+      type: string
+      enum: [temperature, video, light]
+    Sensor:
+      type: object
+      properties:
+        id: { type: integer }
+        userId: { type: integer }
+        name: { type: string }
+        type: { $ref: '#/components/schemas/SensorType' }
+        location: { type: string }
+        unit: { type: string }
+    SensorCreate:
+      type: object
+      required: [name, type, location]
+      properties:
+        name: { type: string }
+        type: { $ref: '#/components/schemas/SensorType' }
+        location: { type: string }
+        unit: { type: string }
+    SensorUpdate:
+      type: object
+      properties:
+        name: { type: string }
+        type: { $ref: '#/components/schemas/SensorType' }
+        location: { type: string }
+        unit: { type: string }
+    RegulatorMode:
+      type: string
+      enum: [discrete, proportional]
+    Regulator:
+      type: object
+      properties:
+        id: { type: integer }
+        userId: { type: integer }
+        name: { type: string }
+        location: { type: string }
+        unit: { type: string }
+        mode: { $ref: '#/components/schemas/RegulatorMode' }
+        status: { type: string }
+    RegulatorCreate:
+      type: object
+      required: [name, mode]
+      properties:
+        name: { type: string }
+        mode: { $ref: '#/components/schemas/RegulatorMode' }
+        location: { type: string }
+        unit: { type: string }
+    RegulatorUpdate:
+      type: object
+      properties:
+        name: { type: string }
+        mode: { $ref: '#/components/schemas/RegulatorMode' }
+        location: { type: string }
+        unit: { type: string }
+    Rule:
+      type: object
+      properties:
+        id: { type: integer }
+        userId: { type: integer }
+        zone: { type: string }
+        sensorId: { type: integer }
+        regulatorId: { type: integer }
+        targetTemperature: { type: number }
+        hysteresis: { type: number }
+        status: { type: string }
+    RuleCreate:
+      type: object
+      required: [zone, sensorId, regulatorId, targetTemperature]
+      properties:
+        zone: { type: string }
+        sensorId: { type: integer }
+        regulatorId: { type: integer }
+        targetTemperature: { type: number }
+        hysteresis: { type: number }
+    RuleUpdate:
+      type: object
+      properties:
+        zone: { type: string }
+        sensorId: { type: integer }
+        regulatorId: { type: integer }
+        targetTemperature: { type: number }
+        hysteresis: { type: number }
+        status: { type: string }
+    TemperatureResponse:
+      type: object
+      properties:
+        value: { type: number }
+        unit: { type: string }
+        timestamp: { type: string, format: date-time }
+        location: { type: string }
+        status: { type: string }
+        sensorId: { type: integer }
+        sensorType: { type: string }
+        description: { type: string }

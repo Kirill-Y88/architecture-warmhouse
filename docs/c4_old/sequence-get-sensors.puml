@@ -1,0 +1,39 @@
+@startuml Sequence_GetSensors
+
+title Последовательность — GET /api/v1/sensors (обогащение живой температурой)
+
+actor "Пользователь" as U
+participant "SensorHandler\n(handlers)" as H
+participant "БД (PostgreSQL)\n(db)" as DB
+participant "TemperatureService\n(services)" as TS
+participant "Temperature API\n(внешний)" as TAPI
+
+U -> H : GET /api/v1/sensors
+activate H
+
+H -> DB : GetSensors(ctx)
+activate DB
+DB --> H : []models.Sensor (таблица sensors)
+deactivate DB
+
+loop для каждого датчика с type == "temperature"
+    H -> TS : GetTemperatureByID(sensor.ID)
+    activate TS
+    TS -> TAPI : GET /temperature/{sensorId}
+    activate TAPI
+    alt 200 OK
+        TAPI --> TS : TemperatureResponse {value, status, timestamp}
+        TS --> H : TemperatureResponse
+    else ошибка
+        TAPI --> TS : ошибка
+        TS --> H : ошибка (логируется, остаётся значение из БД)
+    end
+    deactivate TAPI
+    deactivate TS
+    note over H : при успехе — подмена value / status / last_updated в памяти
+end
+
+H --> U : 200 OK — датчики, обогащённые живой температурой
+deactivate H
+
+@enduml
