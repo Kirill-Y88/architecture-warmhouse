@@ -4,12 +4,6 @@
 
 # Задание 1. Анализ и планирование
 
-<aside>
-
-Чтобы составить документ с описанием текущей архитектуры приложения, можно часть информации взять из описания компании и условия задания. Это нормально.
-
-</aside
-
 ### 1. Описание функциональности монолитного приложения
 
 **Управление отоплением:**
@@ -22,7 +16,6 @@
   - 1) по запросу получить актуальную температуру с запрашиваемого датчика
   - 2) создавать, удалять датчики
   - 3) апдейтить поля датчика (значение и статус)
-- …
 
 ### 2. Анализ архитектуры монолитного приложения
 
@@ -109,12 +102,12 @@
 
 ### 5. Визуализация контекста системы — диаграмма С4
 
-[Диаграмма контекста](docs/c4_old/context.puml)
-[Диаграмма контейнеров](docs/c4_old/container.puml)
-[Диаграмма компонентов](docs/c4_old/component-smart-home-api.puml)
-[Диаграмма классов](docs/c4_old/code.puml)
-[ER диаграмма](docs/c4_old/er-database.puml)
-[Диаграмма последовательности](docs/c4_old/sequence-get-sensors.puml)
+[Диаграмма контекста](docs/c4_old/context.puml),
+[Диаграмма контейнеров](docs/c4_old/container.puml),
+[Диаграмма компонентов](docs/c4_old/component-smart-home-api.puml),
+[Диаграмма классов](docs/c4_old/code.puml),
+[ER диаграмма](docs/c4_old/er-database.puml),
+[Диаграмма последовательности](docs/c4_old/sequence-get-sensors.puml),
 
 # Задание 2. Проектирование микросервисной архитектуры
 
@@ -126,8 +119,8 @@
 
 **Диаграмма компонентов (Components)**
 
-[Диаграмма сервиса температуры](docs/c4_new/component-smart-home-api-temperature-V2.puml)
-[Диаграмма сервиса освещения](docs/c4_new/component-smart-home-api-light-V2.puml)
+[Диаграмма сервиса температуры](docs/c4_new/component-smart-home-api-temperature-V2.puml), 
+[Диаграмма сервиса освещения](docs/c4_new/component-smart-home-api-light-V2.puml), 
 [Диаграмма сервиса видеонаблюдения](docs/c4_new/component-smart-home-api-video-V2.puml)
 
 **Диаграмма кода (Code)**
@@ -174,64 +167,104 @@
 
 ### 2. Документация API
 
-- [Auth Service](docs/c4_new/api/auth-service.yaml)
-- [Temperature Handler](docs/c4_new/api/temperature-handler.yaml)
-- [Light Handler](docs/c4_new/api/light-handler.yaml)
-- [Video Handler](docs/c4_new/api/video-handler.yaml)
+- [Auth Service](docs/c4_new/api/auth-service.yaml),
+- [Temperature Handler](docs/c4_new/api/temperature-handler.yaml),
+- [Light Handler](docs/c4_new/api/light-handler.yaml),
+- [Video Handler](docs/c4_new/api/video-handler.yaml),
 
 # Задание 5. Работа с docker и docker-compose
 
-Перейдите в apps.
+[//]: # (Перейдите в apps.)
 
-Там находится приложение-монолит для работы с датчиками температуры. В README.md описано как запустить решение.
+[//]: # ()
+[//]: # (Там находится приложение-монолит для работы с датчиками температуры. В README.md описано как запустить решение.)
 
-Вам нужно:
+[//]: # ()
+[//]: # (Вам нужно:)
 
 1) сделать простое приложение temperature-api на любом удобном для вас языке программирования, которое при запросе /temperature?location= будет отдавать рандомное значение температуры.
 
-Locations - название комнаты, sensorId - идентификатор названия комнаты
+[//]: # (Locations - название комнаты, sensorId - идентификатор названия комнаты)
 
-```
-	// If no location is provided, use a default based on sensor ID
-	if location == "" {
-		switch sensorID {
-		case "1":
-			location = "Living Room"
-		case "2":
-			location = "Bedroom"
-		case "3":
-			location = "Kitchen"
-		default:
-			location = "Unknown"
-		}
-	}
+- [temperature-api](apps/temperature_api)
 
-	// If no sensor ID is provided, generate one based on location
-	if sensorID == "" {
-		switch location {
-		case "Living Room":
-			sensorID = "1"
-		case "Bedroom":
-			sensorID = "2"
-		case "Kitchen":
-			sensorID = "3"
-		default:
-			sensorID = "0"
-		}
-	}
-```
+[//]: # ()
+[//]: # (```)
 
-2) Приложение следует упаковать в Docker и добавить в docker-compose. Порт по умолчанию должен быть 8081
+[//]: # (	// If no location is provided, use a default based on sensor ID)
 
-3) Кроме того для smart_home приложения требуется база данных - добавьте в docker-compose файл настройки для запуска postgres с указанием скрипта инициализации ./smart_home/init.sql
+[//]: # (	if location == "" {)
 
-Для проверки можно использовать Postman коллекцию smarthome-api.postman_collection.json и вызвать:
+[//]: # (		switch sensorID {)
 
-- Create Sensor
-- Get All Sensors
+[//]: # (		case "1":)
 
-Должно при каждом вызове отображаться разное значение температуры
+[//]: # (			location = "Living Room")
 
-Ревьюер будет проверять точно так же.
+[//]: # (		case "2":)
+
+[//]: # (			location = "Bedroom")
+
+[//]: # (		case "3":)
+
+[//]: # (			location = "Kitchen")
+
+[//]: # (		default:)
+
+[//]: # (			location = "Unknown")
+
+[//]: # (		})
+
+[//]: # (	})
+
+[//]: # ()
+[//]: # (	// If no sensor ID is provided, generate one based on location)
+
+[//]: # (	if sensorID == "" {)
+
+[//]: # (		switch location {)
+
+[//]: # (		case "Living Room":)
+
+[//]: # (			sensorID = "1")
+
+[//]: # (		case "Bedroom":)
+
+[//]: # (			sensorID = "2")
+
+[//]: # (		case "Kitchen":)
+
+[//]: # (			sensorID = "3")
+
+[//]: # (		default:)
+
+[//]: # (			sensorID = "0")
+
+[//]: # (		})
+
+[//]: # (	})
+
+[//]: # (```)
+
+2) Приложение следует упаковать в Docker и добавить в docker-compose. Порт по умолчанию должен быть 8081:
+- [docker](apps/temperature_api/Dockerfile),
+- [docker-compose](apps/docker-compose.yml)
+
+3) Кроме того для smart_home приложения требуется база данных - добавьте в docker-compose файл настройки для запуска postgres с указанием скрипта инициализации ./smart_home/init.sql:
+
+- [docker-compose](apps/docker-compose.yml)
+
+[//]: # (Для проверки можно использовать Postman коллекцию smarthome-api.postman_collection.json и вызвать:)
+
+[//]: # ()
+[//]: # (- Create Sensor)
+
+[//]: # (- Get All Sensors)
+
+[//]: # ()
+[//]: # (Должно при каждом вызове отображаться разное значение температуры)
+
+[//]: # ()
+[//]: # (Ревьюер будет проверять точно так же.)
 
 
